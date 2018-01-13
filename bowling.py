@@ -57,7 +57,22 @@ def bowling(balls):
     return score
 
 
-def test_bowling():
+def bowling1(balls):
+    "Compute the score for one player's game of bowling."
+    return sum(score_frame1(balls) for frame in range(10))
+
+
+def score_frame1(balls):
+    "Return (score, balls): the score for this frame and the remaining balls."
+    n_used, n_scoring = ((1, 3) if balls[0] == 10  # strike
+                         else (2, 3) if balls[0] + balls[1] == 10  # spare
+                         else (2, 2))  # open frame
+    score = sum(balls[:n_scoring])
+    balls[:n_used] = []
+    return score
+
+
+def test_bowling(bowling=bowling):
     "tests."
     assert 0 == bowling([0] * 20)
     assert 20 == bowling([1] * 20)
@@ -71,4 +86,4 @@ def test_bowling():
 
 
 if __name__ == '__main__':
-    test_bowling()
+    test_bowling(bowling1)
