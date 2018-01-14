@@ -52,13 +52,11 @@ def logic_puzzle():
         if designer != Thursday  # 7
         for laptop, droid, tablet, iphone, _ in orderings
         if laptop == Wednesday  # 1
-        if programmer == Wilkes and Hamming == droid or
-        programmer == Hamming and Wilkes == droid  # 3
+        if set([programmer, droid]) == set([Wilkes, Hamming])  # 3
         if Knuth != manager and tablet != manager  # 5
         if tablet != Friday  # 8
         if designer != droid  # 9
-        if laptop == Monday and Wilkes == writer or
-        laptop == writer and Wilkes == Monday  # 11
+        if set([laptop, Wilkes]) == set([Monday, writer])  # 11
         if iphone == Tuesday or tablet == Tuesday  # 12
     )
 
@@ -69,5 +67,11 @@ def person_day_sort(**names):
     return sorted(names, key=lambda name: names[name])
 
 
+def test():
+    "tests."
+    assert logic_puzzle() == ['Wilkes', 'Simon', 'Knuth', 'Hamming', 'Minsky']
+    print('tests success')
+
+
 if __name__ == '__main__':
-    print(logic_puzzle())
+    test()
