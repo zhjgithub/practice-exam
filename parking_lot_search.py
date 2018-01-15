@@ -109,34 +109,35 @@ def solve_parking_puzzle(start, N=N):
     of (object, locations) pairs).  Return a path of [state, action, ...]
     alternating items; an action is a pair (object, distance_moved),
     such as ('B', 16) to move 'B' two squares down on the N=8 grid."""
-
-    def is_goal(state):
-        d = dict(state)
-        return set(d['@']) & set(d['*'])
-
-    def successors(state):
-        occupied = set(s for (c, squares) in state for s in squares if c != '@')
-        results = {}
-        for c, squares in state:
-            if c not in '|@':
-                n = len(squares)
-                if n > 1:
-                    step = squares[1] - squares[0]
-                    d = dict(state)
-                    up_or_left = locs(squares[0] - step, n, step)
-                    while up_or_left[0] not in occupied:
-                        d[c] = up_or_left
-                        results[tuple(d.items())] = (c, up_or_left[0] - squares[0])
-                        up_or_left = locs(up_or_left[0] - step, n, step)
-
-                    down_or_right = locs(squares[0] + step, n, step)
-                    while down_or_right[-1] not in occupied:
-                        d[c] = down_or_right
-                        results[tuple(d.items())] = (c, down_or_right[0] - squares[0])
-                        down_or_right = locs(down_or_right[0] + step, n, step)
-        return results
-
     return shortest_path_search(start, successors, is_goal)
+
+
+def is_goal(state):
+    d = dict(state)
+    return set(d['@']) & set(d['*'])
+
+
+def successors(state):
+    occupied = set(s for (c, squares) in state for s in squares if c != '@')
+    results = {}
+    for c, squares in state:
+        if c not in '|@':
+            n = len(squares)
+            if n > 1:
+                step = squares[1] - squares[0]
+                d = dict(state)
+                up_or_left = locs(squares[0] - step, n, step)
+                while up_or_left[0] not in occupied:
+                    d[c] = up_or_left
+                    results[tuple(d.items())] = (c, up_or_left[0] - squares[0])
+                    up_or_left = locs(up_or_left[0] - step, n, step)
+
+                down_or_right = locs(squares[0] + step, n, step)
+                while down_or_right[-1] not in occupied:
+                    d[c] = down_or_right
+                    results[tuple(d.items())] = (c, down_or_right[0] - squares[0])
+                    down_or_right = locs(down_or_right[0] + step, n, step)
+    return results
 
 
 # But it would also be nice to have a simpler format to describe puzzles,
@@ -198,6 +199,36 @@ puzzle3 = grid((
     ('O', locs(45, 2, N)),
     ('Y', locs(49, 3))))
 
+puzzle4 = grid((
+    ('*', locs(26, 2)),
+    ('G', locs(9, 2)),
+    ('Y', locs(14, 3, N)),
+    ('P', locs(17, 3, N)),
+    ('O', locs(41, 2, N)),
+    ('B', locs(20, 3, N)),
+    ('A', locs(45, 2)),
+    ('S', locs(51, 3))))
+
+
+def valid_solution(puzzle, length):
+    "Does solve_parking_puzzle solve this puzzle in length steps?"
+    path = solve_parking_puzzle(puzzle)
+    return (len(path_actions(path)) == length and
+            same_state(path[0], puzzle) and
+            is_goal(path[-1]) and
+            all(legal_step(path[i:i+3]) for i in range(0,len(path)-2, 2)))
+
+def legal_step(path):
+    "A legal step has an action that leads to a valid successor state."
+    # Here the path must be of the form [s0, a, s1].
+    state1, action, state2 = path 
+    succs = successors(state1)
+    return state2 in succs and succs[state2] == action
+
+def same_state(state1, state2):
+    "Two states are the same if all corresponding sets of locs are the same."
+    d1, d2 = dict(state1), dict(state2)
+    return all(set(d1[key]) == set(d2[key]) for key in set(d1) | set(d2))
 
 # Here are the shortest_path_search and path_actions functions from the unit.
 # You may use these if you want, but you don't have to.
@@ -228,10 +259,25 @@ def path_actions(path):
 
 def test():
     "tests."
-    show(puzzle1)
-    show(puzzle2)
-    show(puzzle3)
+    assert valid_solution(puzzle1, 4)
+    assert valid_solution(puzzle2, 7)
+    assert valid_solution(puzzle3, 7)
+    assert valid_solution(puzzle4, 8)
+    assert locs(26, 2) == (26, 27)
+    assert locs(20, 3, 8) == (20, 28, 36)
+    assert same_state(
+        grid((('*', locs(25, 2)),
+              ('B', locs(19, 3, N)),
+              ('P', locs(36, 3)),
+              ('O', locs(45, 2, N)),
+              ('Y', locs(49, 3)))),
+        (('*', (25, 26)), ('B', (19, 27, 35)), ('P', (36, 37, 38)), 
+         ('O', (45, 53)), ('Y', (49, 50, 51)), 
+         ('|', (0, 1, 2, 3, 4, 5, 6, 7, 56, 57, 58, 59, 60, 61, 62, 63, 
+                8, 16, 24, 32, 40, 48, 15, 23, 39, 47, 55)), 
+            ('@', (31,))))
     print(path_actions(solve_parking_puzzle(puzzle1)))
+    print('tests success')
 
 if __name__ == '__main__':
     test()
