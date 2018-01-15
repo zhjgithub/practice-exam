@@ -112,28 +112,25 @@ def solve_parking_puzzle(start, N=N):
 
     def is_goal(state):
         d = dict(state)
-        return d['@'][0] == d['*'][-1]
+        return set(d['@']) & set(d['*'])
 
     def successors(state):
-        board = ['.'] * N * N
-        for (c, squares) in state:
-            for s in squares:
-                board[s] = c
+        occupied = set(s for (c, squares) in state for s in squares if c != '@')
         results = {}
         for c, squares in state:
-            if c != '|' and c != '@':
+            if c not in '|@':
                 n = len(squares)
                 if n > 1:
                     step = squares[1] - squares[0]
                     d = dict(state)
                     up_or_left = locs(squares[0] - step, n, step)
-                    while board[up_or_left[0]] == '.':
+                    while up_or_left[0] not in occupied:
                         d[c] = up_or_left
                         results[tuple(d.items())] = (c, up_or_left[0] - squares[0])
                         up_or_left = locs(up_or_left[0] - step, n, step)
 
                     down_or_right = locs(squares[0] + step, n, step)
-                    while board[down_or_right[-1]] in ('.', '@'):
+                    while down_or_right[-1] not in occupied:
                         d[c] = down_or_right
                         results[tuple(d.items())] = (c, down_or_right[0] - squares[0])
                         down_or_right = locs(down_or_right[0] + step, n, step)
@@ -159,8 +156,8 @@ def grid(cars, N=N):
     pair, like ('@', (31,)), to indicate this. The variable 'cars'  is a
     tuple of pairs like ('*', (26, 27)). The return result is a big tuple
     of the 'cars' pairs along with the walls and goal pairs."""
-    goal = ('@', (N * (N // 2) - 1, ) )
-    wall = ('|', tuple(i + j * N for i in range(N) for j in range(N) if (i % N == 0 or i % N == N - 1 or j == 0 or j == N - 1) and i + j * N != N * (N // 2) - 1))
+    goal = ('@', (N * N // 2 - 1, ))
+    wall = ('|', tuple(w for w in locs(0, N) + locs(N * (N - 1), N) + locs(N, N - 2, N) + locs(2 * N - 1, N - 2, N) if w not in goal[1]))
     return cars + (goal, wall)
 
 
