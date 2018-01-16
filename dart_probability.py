@@ -56,6 +56,7 @@ easiest targets first: 'S' is easiest, then 'T', then 'D'.
 """
 
 base_scores = list(range(1, 21))
+doubles = [i * 2 for i in base_scores] + [50]
 mul_score = {'S':1,'T':3, 'D':2}
 score_names = {25: 'SB', 50: 'DB'}
 for c, t in mul_score.items():
@@ -67,26 +68,12 @@ def double_out(total):
     """Return a shortest possible list of targets that add to total,
     where the length <= 3 and the final element is a double.
     If there is no solution, return None."""
-
-    def find_target(pre=None):
-        if pre is None:
-            pre = []
-        if len(pre) >= 3:
-            return
-        pre_sum = sum(pre)
-        for i in all_scores:
-            if pre_sum + i == total:
-                cur = pre + [i]
-                if 0 in cur:
-                    cur.remove(0)
-                if score_names[cur[-1]].startswith('D'):
-                    results.add(tuple(score_names[s] for s in cur))
-            elif pre_sum + i < total:
-                find_target(pre + [i])
-
-    results = set()
-    find_target()
-    return list(sorted(results, key=len)[0]) if results else None
+    for d1 in all_scores:
+        for d2 in all_scores:
+            d3 = total - d1 - d2
+            if d3 in doubles:
+                return [score_names[d] for d in [d1, d2, d3] if d != 0]
+    return None
 
 
 """
@@ -163,8 +150,8 @@ def outcome(target, miss):
     if miss == 0.0:
         return {target: 1.0}
     if target == 'DB':
-        p_section = miss * 3 / 3 * miss / 20 + (1 - miss * 3) * miss / 20 + miss * 3 * 2 / 3 / 20
-        return dict([('SB', miss * 3 / 3 * (1 - miss)), ('DB', (1 - miss * 3) * (1 - miss))] + [('S' + str(i), p_section) for i in base_scores])
+        p_section = miss * 3 / 3 * miss / 20 + min(1.0, (1 - miss * 3)) * miss / 20 + miss * 3 * 2 / 3 / 20
+        return dict([('SB', miss * 3 / 3 * (1 - miss)), ('DB', min(1.0, (1 - miss * 3)) * (1 - miss))] + [('S' + str(i), p_section) for i in base_scores])
     elif target == 'SB':
         p_section = miss / 4 * miss / 20 + (1 - miss) * miss / 20 + miss * 3 / 4 / 20
         return dict([('SB', (1 - miss) * (1 - miss)), ('DB', miss / 4 * (1 - miss))] + [('S' + str(i), p_section) for i in base_scores])
